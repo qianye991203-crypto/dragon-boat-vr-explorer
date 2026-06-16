@@ -90,8 +90,8 @@
         .escape-hint{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:18px;text-align:center;line-height:1.7}
         .pwd-row{display:flex;gap:10px;margin-bottom:18px}
         .pwd-cell{width:58px;height:68px;background:rgba(0,0,0,.45);border:2.5px solid #7C3AED;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace;-webkit-user-select:none;user-select:none}
-        .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
-        .k-key{height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);min-height:54px}
+        .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;-webkit-box-sizing:border-box;box-sizing:border-box}
+        .k-key{height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);min-height:54px;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;padding:0;margin:0}
         .k-key:active{background:#7C3AED;transform:scale(.93);border-color:#A78BFA}
         .k-del{background:linear-gradient(145deg,#7f1d1d 0%,#450a0a 100%);border-color:#DC2626}
 
@@ -138,6 +138,7 @@
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
         .sachet-final-icon{font-size:72px;display:inline-block;animation:sachetShine 2s ease-in-out infinite}
         @keyframes sachetShine{0%,100%{filter:drop-shadow(0 0 12px rgba(239,68,68,.5))}50%{filter:drop-shadow(0 0 28px rgba(239,68,68,.8))}}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
 
         /* ===== 完成页/勋章页 ===== */
         #doneScreen{background:linear-gradient(180deg,#c0392b 0%,#b36b4a 40%,#1a3a5c 75%,#0d2137 100%);padding-top:40px}
@@ -541,82 +542,125 @@ function submitPwd(){
 // ========== G3: 考古挖掘 ==========
 function initG3(){
     const ground=$('digGround');ground.innerHTML='';
-    const fossils=['🦕','🦖','🦴','🐚','💎'];
+    const fossils=[{e:'🦕',n:'霸王龙'},{e:'🦖',n:'翼龙'},{e:'🦴',n:'恐龙骨'},{e:'🐚',n:'远古海螺'},{e:'💎',n:'神秘宝石'},{e:'🥚',n:'恐龙蛋'}];
     const used=[];
+    const targetCount=5;
     fossils.forEach(f=>{
         let x,y,tries=0;
         do{x=8+Math.random()*84;y=10+Math.random()*60;tries++}
         while(used.some(p=>Math.hypot(p.x-x,p.y-y)<16)&&tries<50);
         used.push({x,y});
-        const el=document.createElement('div');el.className='fossil-item';el.textContent=f;
+        const el=document.createElement('div');el.className='fossil-item';el.textContent=f.e;
+        el.dataset.name=f.n;el.dataset.hits='0';el.dataset.maxHits=String(2+Math.floor(Math.random()*2));
         el.style.left=x+'%';el.style.top=y+'%';
         el.onclick=()=>digIt(el,f);ground.appendChild(el)
     });
-    S.g3.found=0;$('g3Count').textContent=0
+    S.g3.found=0;S.g3.total=targetCount;$('g3Count').textContent='0/'+targetCount
 }
 function digIt(el,f){
     if(el.classList.contains('found'))return;
-    el.classList.add('found');
-    S.g3.found++;$('g3Count').textContent=S.g3.found;
+    let h=parseInt(el.dataset.hits||0);
+    const maxH=parseInt(el.dataset.maxHits||2);
+    h++;el.dataset.hits=h;
     // 锤子效果
     const box=$('digBox'),r=el.getBoundingClientRect(),br=box.getBoundingClientRect();
-    const h=document.createElement('div');h.className='dig-hammer';h.textContent='🔨';
-    h.style.left=(r.left-br.left+r.width/2-15)+'px';h.style.top=(r.top-br.top+r.height/2-15)+'px';
-    box.appendChild(h);requestAnimationFrame(()=>h.classList.add('hit'));
-    setTimeout(()=>h.remove(),300);
-    if(S.g3.found>=5)setTimeout(()=>finish(3),600)
+    const hm=document.createElement('div');hm.className='dig-hammer';hm.textContent='🔨';
+    hm.style.left=(r.left-br.left+r.width/2-15)+'px';hm.style.top=(r.top-br.top+r.height/2-15)+'px';
+    box.appendChild(hm);requestAnimationFrame(()=>hm.classList.add('hit'));
+    setTimeout(()=>hm.remove(),300);
+    if(h>=maxH){
+        el.classList.add('found');
+        S.g3.found++;$('g3Count').textContent=S.g3.found+'/'+S.g3.total;
+        toast('✨ 发现了 '+(f.n||f)+'！');
+        if(S.g3.found>=S.g3.total)setTimeout(()=>finish(3),600)
+    }else{
+        el.style.opacity=0.4+0.6*(h/maxH);
+        toast('⛏️ 挖掘中... ('+h+'/'+maxH+')')
+    }
 }
 
 // ========== G4: MR秘境 ==========
+let g4Timer=null;
 function initG4(){
+    if(g4Timer)clearInterval(g4Timer);
     const stars=$('mrStars');stars.innerHTML='';
     for(let i=0;i<20;i++){
         const s=document.createElement('div');s.className='mr-star';
         s.textContent='✦';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
-        s.style.animationDelay=Math.random()*2+'s';stars.appendChild(s)
+        s.animationDelay=Math.random()*2+'s';stars.appendChild(s)
     }
     const box=$('mrBox'),ground=box.querySelector('.mr-ground');
-    // 清除旧物品
     box.querySelectorAll('.mr-item').forEach(e=>e.remove());
-    const items=['🌟','💎','🔮','⭐','🌙','☁️'];
+    // 8个物品，收集6个即可过关
+    const items=['🌟','💎','🔮','⭐','🌙','☁️','🔥','💫'];
     items.forEach((it,i)=>{
         const el=document.createElement('div');el.className='mr-item';el.textContent=it;
-        el.style.left=(12+Math.random()*76)+'%';el.style.top=(8+Math.random()*48)+'%';
-        el.style.animationDelay=i*.4+'s';
+        el.style.left=(10+Math.random()*78)+'%';el.style.top=(6+Math.random()*50)+'%';
+        el.style.animationDelay=i*.35+'s';
         el.onclick=()=>collectMR(el,box);box.insertBefore(el,ground)
     });
-    S.g4.collected=0;$('g4Count').textContent=0
+    S.g4.collected=0;S.g4.total=6;$('g4Count').textContent='0/6';
+    // 25秒倒计时
+    let timeLeft=25;
+    g4Timer=setInterval(()=>{
+        timeLeft--;
+        if(timeLeft<=0){clearInterval(g4Timer);g4Timer=null;toast('⏰ 时间到！');setTimeout(()=>go('missionScreen'),1200);return}
+        if(timeLeft%5===0&&timeLeft>0){
+            const remaining=[];box.querySelectorAll('.mr-item:not(.got)').forEach(e=>remaining.push(e));
+            if(remaining.length>S.g4.total-S.g4.collected){
+                const victim=remaining[Math.floor(Math.random()*remaining.length)];
+                victim.style.transition='all .5s';victim.style.opacity='0';victim.style.transform='scale(0)';
+                setTimeout(()=>{if(!victim.classList.contains('got'))victim.remove()},500);
+                toast('⚠️ 一个神秘物品消失了！')
+            }
+        }
+    },1000)
 }
 function collectMR(el,box){
     if(el.classList.contains('got'))return;
     el.classList.add('got');
-    S.g4.collected++;$('g4Count').textContent=S.g4.collected;
-    // 星星特效
+    S.g4.collected++;$('g4Count').textContent=S.g4.collected+'/'+S.g4.total;
     const r=el.getBoundingClientRect(),br=box.getBoundingClientRect();
     const sp=document.createElement('div');sp.className='mr-sparkle';
     sp.innerHTML='✨';sp.style.left=(r.left-br.left+r.width/2-15)+'px';
     sp.style.top=(r.top-br.top+r.height/2-15)+'px';
     sp.style.fontSize='24px';box.appendChild(sp);setTimeout(()=>sp.remove(),600);
     setTimeout(()=>el.style.display='none',500);
-    if(S.g4.collected>=6)setTimeout(()=>finish(4),500)
+    if(S.g4.collected>=S.g4.total){clearInterval(g4Timer);g4Timer=null;setTimeout(()=>finish(4),500)}
 }
 
 // ========== G5: 香包DIY ==========
 function initG5(){
     const grid=$('ingGrid');grid.innerHTML='';
-    const ings=[['🍃','艾草'],['🌸','薰衣草'],['🌺','茉莉花'],['🌿','薄荷'],['⭐','朱砂']];
-    ings.forEach(([ic,n])=>{
+    // 随机指定一个正确顺序（每次不同）
+    const allIngs=[['🍃','艾草'],['🌸','薰衣草'],['🌺','茉莉花'],['🌿','薄荷'],['⭐','朱砂']];
+    const shuffled=[...allIngs].sort(()=>Math.random()-.5);
+    S.g5.order=shuffled.map(i=>i[0]); // 正确顺序
+    allIngs.forEach(([ic,n])=>{
         const c=document.createElement('div');c.className='ing-card';
         c.innerHTML=`<div class="ing-icon">${ic}</div><div class="ing-name">${n}</div>`;
         c.onclick=()=>addIng(c,ic);grid.appendChild(c)
     });
     $('bowlItems').innerHTML='';$('sachetResult').classList.remove('show');
-    S.g5.progress=0;$('g5Count').textContent=0
+    S.g5.progress=0;S.g5.mistakes=0;$('g5Count').textContent='0/5';
+    toast('💡 提示：按正确顺序添加材料！')
 }
 function addIng(card,emoji){
     if(card.classList.contains('used'))return;
+    const expected=S.g5.order[S.g5.progress];
+    if(emoji!==expected){
+        // 选错了
+        S.g5.mistakes++;
+        card.style.animation='shake .4s ease';
+        setTimeout(()=>card.style.animation='',400);
+        if(S.g5.mistakes>=3){
+            toast('❌ 材料顺序不对，重新开始吧~');
+            setTimeout(()=>initG5(),1000);return
+        }
+        toast('❌ 顺序不对哦，再想想~ (错误'+S.g5.mistakes+'/3)');return
+    }
     card.classList.add('used');
-    S.g5.progress++;$('g5Count').textContent=S.g5.progress;
+    S.g5.progress++;$('g5Count').textContent=S.g5.progress+'/5';
     const bi=$('bowlItems');
     const item=document.createElement('span');item.className='bowl-item';item.textContent=emoji;
     bi.appendChild(item);
