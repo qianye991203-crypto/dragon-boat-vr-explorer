@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>端午VR探险家 - 创幻云VR亲子剧场</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-        body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:#0d1117;min-height:100vh;overflow:hidden;position:relative;color:#fff}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:#0d1117;min-height:100vh;overflow-x:hidden;position:relative;color:#fff;-webkit-tap-highlight-color:transparent}
         
         /* 全局背景 */
-        .bg-layer{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+        .bg-layer{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
         .bg-layer::before{content:'';position:absolute;top:-30%;right:-20%;width:80%;height:80%;background:radial-gradient(ellipse,rgba(220,38,38,.12) 0%,transparent 70%)}
         .bg-layer::after{content:'';position:absolute;bottom:-30%;left:-20%;width:80%;height:80%;background:radial-gradient(ellipse,rgba(30,58,138,.15) 0%,transparent 70%)}
         
@@ -18,7 +18,7 @@
         @keyframes floatY{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-18px) rotate(12deg)}}
 
         /* ===== 屏幕系统 ===== */
-        .screen{display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:absolute;top:0;left:0;z-index:1}
+        .screen{display:none;width:100%;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:absolute;top:0;left:0;z-index:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
         .screen.active{display:flex}
         .screen-enter{animation:slideUp .4s ease}
         @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
@@ -34,8 +34,9 @@
         .home-title{font-size:30px;font-weight:900;color:#FFD700;text-shadow:0 4px 16px rgba(255,215,0,.5),0 2px 4px rgba(0,0,0,.3);margin-bottom:6px;text-align:center;line-height:1.3}
         .home-sub{font-size:14px;color:rgba(255,255,255,.85);margin-bottom:8px;text-align:center}
         .home-store{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:36px;display:flex;align-items:center;gap:6px}
-        .start-btn{background:linear-gradient(135deg,#FFD700,#F39C12);color:#8B0000;border:none;padding:16px 56px;font-size:19px;font-weight:800;border-radius:50px;cursor:pointer;box-shadow:0 8px 28px rgba(255,215,0,.45);transition:all .25s;letter-spacing:2px}
+        .start-btn{background:linear-gradient(135deg,#FFD700,#F39C12);color:#8B0000;border:none;padding:16px 56px;font-size:19px;font-weight:800;border-radius:50px;cursor:pointer;box-shadow:0 8px 28px rgba(255,215,0,.45);transition:all .25s;letter-spacing:2px;position:relative;z-index:100;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0)}
         .start-btn:active{transform:scale(.94);box-shadow:0 4px 14px rgba(255,215,0,.3)}
+        button,[onclick]{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(255,255,0,.2)}
         .home-wave{position:absolute;bottom:0;left:0;width:100%;height:120px;overflow:hidden;opacity:.08}
         .home-wave svg{width:200%;height:100%;animation:waveMove 8s linear infinite}
         @keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
