@@ -75,24 +75,24 @@
 
         /* === 游戏1: 迷宫 === */
         .maze-box{width:100%;max-width:320px;aspect-ratio:1;background:#080c14;border-radius:14px;position:relative;overflow:hidden;box-shadow:0 0 36px rgba(74,144,217,.2),inset 0 0 30px rgba(0,0,0,.5)}
-        .maze-canvas{width:100%;height:100%}
-        .maze-player{position:absolute;width:28px;height:28px;background:radial-gradient(circle at 35% 35%,#FFE066,#FFD700 40%,#F39C12);border-radius:50%;box-shadow:0 0 16px rgba(255,215,0,.7),0 2px 6px rgba(0,0,0,.4);z-index:10;transition:left .12s,top .12s ease-out}
-        .maze-goal{position:absolute;width:36px;height:36px;background:radial-gradient(circle,#6EE7B7,#34D399);border-radius:50%;z-index:5;animation:goalGlow 1.2s ease-in-out infinite}
+        .maze-canvas{width:100%;height:100%;display:block}
+        .maze-player{position:absolute;width:28px;height:28px;background:radial-gradient(circle at 35% 35%,#FFE066,#FFD700 40%,#F39C12);border-radius:50%;box-shadow:0 0 16px rgba(255,215,0,.7),0 2px 6px rgba(0,0,0,.4);z-index:10;transition:left .1s,top .1s linear;pointer-events:none}
+        .maze-goal{position:absolute;width:36px;height:36px;background:radial-gradient(circle,#6EE7B7,#34D399);border-radius:50%;z-index:5;animation:goalGlow 1.2s ease-in-out infinite;pointer-events:none}
         @keyframes goalGlow{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(52,211,153,.6)}50%{transform:scale(1.15);box-shadow:0 0 32px rgba(52,211,153,.9)}}
-        .maze-controls{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:6px;margin-top:20px}
-        .mc-btn{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:12px;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
-        .mc-btn:active{background:rgba(255,215,0,.25);border-color:#FFD700;transform:scale(.92)}
-        .mc-btn.empty{visibility:hidden}
+        .maze-controls{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;margin-top:16px;width:100%;max-width:240px}
+        .mc-btn{background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.08));border:2px solid rgba(255,255,255,.25);border-radius:14px;color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;padding:14px;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(255,215,0,.3);min-height:54px}
+        .mc-btn:active{background:rgba(255,215,0,.35);border-color:#FFD700;transform:scale(.92)}
+        .mc-btn.empty{visibility:hidden;background:transparent;border:none}
 
         /* === 游戏2: 密码锁 === */
-        .escape-box{width:100%;max-width:320px;aspect-ratio:.85;background:linear-gradient(145deg,#1e1630 0%,#141024 100%);border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;box-shadow:0 0 40px rgba(157,78,221,.2)}
-        .escape-title{color:#C084FC;font-size:17px;font-weight:700;margin-bottom:6px}
-        .escape-hint{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:20px;text-align:center;line-height:1.7}
-        .pwd-row{display:flex;gap:10px;margin-bottom:20px}
-        .pwd-cell{width:56px;height:64px;background:rgba(0,0,0,.4);border:2.5px solid #7C3AED;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace}
-        .keypad{display:grid;grid-template-columns:repeat(3,62px);gap:8px}
-        .k-key{height:48px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:10px;color:#fff;font-size:19px;font-weight:700;cursor:pointer;transition:all .15s}
-        .k-key:active{background:#7C3AED;transform:scale(.93)}
+        .escape-box{width:100%;max-width:340px;background:linear-gradient(145deg,#1e1630 0%,#141024 100%);border-radius:16px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;box-shadow:0 0 40px rgba(157,78,221,.2)}
+        .escape-title{color:#C084FC;font-size:18px;font-weight:700;margin-bottom:6px}
+        .escape-hint{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:18px;text-align:center;line-height:1.7}
+        .pwd-row{display:flex;gap:10px;margin-bottom:18px}
+        .pwd-cell{width:58px;height:68px;background:rgba(0,0,0,.45);border:2.5px solid #7C3AED;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace;-webkit-user-select:none;user-select:none}
+        .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+        .k-key{height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);min-height:54px}
+        .k-key:active{background:#7C3AED;transform:scale(.93);border-color:#A78BFA}
         .k-del{background:linear-gradient(145deg,#7f1d1d 0%,#450a0a 100%);border-color:#DC2626}
 
         /* === 游戏3: 考古挖掘 === */
@@ -352,7 +352,7 @@ function go(id){
     el.classList.add('active','screen-enter');
     setTimeout(()=>el.classList.remove('screen-enter'),400);
     
-    if(id==='g1Screen') startG1();
+    if(id==='g1Screen'){startG1();setTimeout(()=>{if(!g1Ready)initG1();},100)}
     else if(S.g1.timer){clearInterval(S.g1.timer);S.g1.timer=null}
     if(id==='missionScreen'){renderMissions();checkAllDone()}
 }
@@ -406,9 +406,13 @@ function startMission(id){
 }
 
 // ========== G1: 迷宫 ==========
+let g1Ready = false;
 function initG1(){
     const box=$('mazeBox'),cv=$('mazeCanvas');
-    cv.width=box.offsetWidth;cv.height=box.offsetHeight;
+    if(!box||!cv)return;
+    const w = box.offsetWidth || 300;
+    const h = box.offsetHeight || 300;
+    cv.width = w; cv.height = h;
     const sz=S.maze.size, cs=cv.width/sz;
     S.maze.cs=cs;
     // 生成迷宫
@@ -421,14 +425,20 @@ function initG1(){
     S.maze.grid=g;
     drawMaze();
     placeMazeObj();
-    // 控制按钮
-    document.querySelectorAll('#mazeCtrl .mc-btn[data-dir]').forEach(btn=>{
-        btn.addEventListener('click',()=>movePlayer(btn.dataset.dir))
-    });
+    g1Ready = true;
+    // 控制按钮 - 使用事件委托
+    const ctrl=$('mazeCtrl');
+    if(ctrl){
+        ctrl.addEventListener('click',function(e){
+            const btn=e.target.closest('[data-dir]');
+            if(btn)movePlayer(btn.dataset.dir)
+        });
+    }
     // 触摸滑动
     let tx=0,ty=0;
     box.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
     box.addEventListener('touchend',e=>{
+        if(e.changedTouches.length===0)return;
         const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
         if(Math.abs(dx)>Math.abs(dy)){
             if(dx>25)movePlayer('right');else if(dx<-25)movePlayer('left')
@@ -496,14 +506,20 @@ function initG2(){
     const kp=$('keypad');kp.innerHTML='';
     '1234567890'.split().forEach(n=>{
         const b=document.createElement('button');b.className='k-key';b.textContent=n;
-        b.onclick=()=>inputPwd(n);kp.appendChild(b)
+        b.dataset.num=n;kp.appendChild(b)
     });
     const del=document.createElement('button');del.className='k-key k-del';del.textContent='⌫';
-    del.onclick=()=>{if(S.g2.pwd.length){S.g2.pwd=S.g2.pwd.slice(0,-1);updatePwd()}};
-    kp.appendChild(del);
+    del.dataset.act='del';kp.appendChild(del);
     const ok=document.createElement('button');ok.className='k-key';ok.style.gridColumn='span 3';
     ok.style.background='linear-gradient(145deg,#059669 0%,#047857 100%)';ok.style.borderColor='#10B981';
-    ok.textContent='确认 ✓';ok.onclick=submitPwd;kp.appendChild(ok)
+    ok.textContent='确认 ✓';ok.dataset.act='ok';kp.appendChild(ok);
+    // 使用事件委托 - 更可靠
+    kp.addEventListener('click',function(e){
+        const t=e.target.closest('.k-key');if(!t)return;
+        if(t.dataset.num){inputPwd(t.dataset.num)}
+        else if(t.dataset.act==='del'){if(S.g2.pwd.length){S.g2.pwd=S.g2.pwd.slice(0,-1);updatePwd()}}
+        else if(t.dataset.act==='ok'){submitPwd()}
+    });
 }
 function inputPwd(n){
     if(S.g2.pwd.length<4){S.g2.pwd+=n;updatePwd()}
