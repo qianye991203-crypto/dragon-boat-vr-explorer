@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>端午VR探险家 - 扫码入口</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:-apple-system,'PingFang SC',sans-serif;
+            background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a1a2e 100%);
+            min-height:100vh;display:flex;flex-direction:column;align-items:center;
+            justify-content:center;color:#fff;padding:24px;text-align:center
+        }
+        h1{font-size:28px;color:#FFD700;margin-bottom:6px;text-shadow:0 4px 16px rgba(255,215,0,.5)}
+        .sub{color:rgba(255,255,255,.65);font-size:14px;margin-bottom:28px}
+        .qr-wrap{background:#fff;padding:18px;border-radius:16px;margin-bottom:24px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+        .qr-wrap img,#qrcode canvas{display:block;border-radius:8px}
+        .url-card{background:rgba(255,255,255,.08);border-radius:12px;padding:16px 20px;margin-bottom:20px;max-width:400px}
+        .url-label{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px}
+        .url-text{font-size:13px;color:#4ADE80;word-break:break-all;font-family:monospace;line-height:1.5}
+        .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+        .btn{padding:12px 28px;border-radius:30px;font-size:15px;font-weight:700;text-decoration:none;cursor:pointer;border:none;transition:.2s}
+        .btn-primary{background:linear-gradient(135deg,#FFD700,#F39C12);color:#8B0000}
+        .btn-sec{background:rgba(255,255,255,.12);color:#fff}
+        .tips{margin-top:20px;font-size:12px;color:rgba(255,255,255,.4);line-height:1.9}
+        .status{margin-top:14px;font-size:13px;color:#4ADE80}
+    </style>
+</head>
+<body>
+    <h1>🎮 端午VR探险家</h1>
+    <p class="sub">创幻云VR亲子剧场 · 扫码参与闯关活动</p>
+
+    <div class="qr-wrap" id="qrWrap"><div id="qrcode"></div></div>
+
+    <div class="url-card">
+        <div class="url-label">📱 手机访问地址（全球可访问）：</div>
+        <div class="url-text" id="urlText"></div>
+    </div>
+
+    <div class="btn-row">
+        <a class="btn btn-primary" id="linkBtn" target="_blank">🖥️ 电脑预览</a>
+        <a class="btn btn-sec" onclick="copyUrl()">📋 复制链接</a>
+    </div>
+
+    <p class="status">✅ 服务运行中 · 二维码可永久使用</p>
+    <p class="tips">
+        💡 微信/浏览器扫码均可打开<br>
+        📲 可转发到朋友圈、微信群传播<br>
+        🎁 完成闯关后出示勋章页面到店兑换香包
+    </p>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        const url = 'https://curvy-rockets-call.loca.lt';
+        document.getElementById('urlText').textContent = url;
+        document.getElementById('linkBtn').href = url;
+
+        new QRCode(document.getElementById('qrcode'), {
+            text: url,
+            width: 220,
+            height: 220,
+            colorDark: '#000',
+            colorLight: '#fff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        function copyUrl() {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ 链接已复制！可发送给好友');
+            }).catch(() => {
+                prompt('复制以下链接：', url);
+            });
+        }
+    </script>
+</body>
+</html>

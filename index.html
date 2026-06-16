@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>端午VR探险家 - 创幻云VR亲子剧场</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+        body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:#0d1117;min-height:100vh;overflow:hidden;position:relative;color:#fff}
+        
+        /* 全局背景 */
+        .bg-layer{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+        .bg-layer::before{content:'';position:absolute;top:-30%;right:-20%;width:80%;height:80%;background:radial-gradient(ellipse,rgba(220,38,38,.12) 0%,transparent 70%)}
+        .bg-layer::after{content:'';position:absolute;bottom:-30%;left:-20%;width:80%;height:80%;background:radial-gradient(ellipse,rgba(30,58,138,.15) 0%,transparent 70%)}
+        
+        /* 浮动装饰 */
+        .float-item{position:absolute;font-size:22px;opacity:.2;animation:floatY 7s ease-in-out infinite;z-index:0}
+        @keyframes floatY{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-18px) rotate(12deg)}}
+
+        /* ===== 屏幕系统 ===== */
+        .screen{display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:absolute;top:0;left:0;z-index:1}
+        .screen.active{display:flex}
+        .screen-enter{animation:slideUp .4s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ===== 首页 ===== */
+        #homeScreen{
+            background:linear-gradient(180deg,#c0392b 0%,#a93226 35%,#1a3a5c 70%,#0d2137 100%);
+            padding-top:60px
+        }
+        .home-badge{width:130px;height:130px;margin-bottom:24px;animation:bounceIn .8s ease,badgePulse 2.5s ease-in-out infinite 1s}
+        @keyframes bounceIn{0%{transform:scale(0)rotate(-10deg);opacity:0}60%{transform:scale(1.15)rotate(5deg);opacity:1}100%{transform:scale(1)rotate(0)}}
+        @keyframes badgePulse{0%,100%{box-shadow:0 8px 32px rgba(255,215,0,.4)}50%{box-shadow:0 8px 48px rgba(255,215,0,.7)}}
+        .home-title{font-size:30px;font-weight:900;color:#FFD700;text-shadow:0 4px 16px rgba(255,215,0,.5),0 2px 4px rgba(0,0,0,.3);margin-bottom:6px;text-align:center;line-height:1.3}
+        .home-sub{font-size:14px;color:rgba(255,255,255,.85);margin-bottom:8px;text-align:center}
+        .home-store{font-size:13px;color:rgba(255,255,255,.55);margin-bottom:36px;display:flex;align-items:center;gap:6px}
+        .start-btn{background:linear-gradient(135deg,#FFD700,#F39C12);color:#8B0000;border:none;padding:16px 56px;font-size:19px;font-weight:800;border-radius:50px;cursor:pointer;box-shadow:0 8px 28px rgba(255,215,0,.45);transition:all .25s;letter-spacing:2px}
+        .start-btn:active{transform:scale(.94);box-shadow:0 4px 14px rgba(255,215,0,.3)}
+        .home-wave{position:absolute;bottom:0;left:0;width:100%;height:120px;overflow:hidden;opacity:.08}
+        .home-wave svg{width:200%;height:100%;animation:waveMove 8s linear infinite}
+        @keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+        /* ===== 任务列表 ===== */
+        #missionScreen{background:linear-gradient(180deg,#0f172a 0%,#0d1321 100%);padding-top:54px}
+        .top-bar{position:absolute;top:0;left:0;width:100%;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);z-index:10}
+        .back-btn{background:none;border:none;color:rgba(255,255,255,.8);font-size:14px;cursor:pointer;display:flex;align-items:center;gap:4px;padding:6px 0}
+        .prog-dots{display:flex;gap:6px}
+        .prog-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
+        .prog-dot.done{background:#4ADE80;box-shadow:0 0 8px rgba(74,222,128,.5)}
+        .mission-title{font-size:22px;font-weight:bold;color:#fff;margin-bottom:20px}
+        .mission-list{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;padding-bottom:110px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .m-card{background:rgba(255,255,255,.07);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .25s;border:2px solid transparent;position:relative;overflow:hidden}
+        .m-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:0 4px 4px 0;transition:all .25s}
+        .m-card[data-mission="1"]::before{background:#4a90d9}.m-card[data-mission="2"]::before{background:#9D4EDD}
+        .m-card[data-mission="3"]::before{background:#C0986B}.m-card[data-mission="4"]::before{background:#4ADE80}.m-card[data-mission="5"]::before{background:#EF4444}
+        .m-card:active{transform:scale(.97);background:rgba(255,255,255,.12)}
+        .m-card.done{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.06)}
+        .m-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0}
+        .m-info{flex:1;min-width:0}
+        .m-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:2px}
+        .m-desc{font-size:11px;color:rgba(255,255,255,.5)}
+        .m-check{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;transition:all .3s}
+        .m-card.done .m-check{background:linear-gradient(135deg,#4ADE80,#22c55e)}
+        .claim-btn{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FFD700,#F39C12);color:#8B0000;border:none;padding:14px 44px;font-size:17px;font-weight:800;border-radius:50px;cursor:pointer;box-shadow:0 6px 24px rgba(255,215,0,.4);z-index:20;white-space:nowrap;animation:btnPop .5s ease}
+        .claim-btn:active{transform:translateX(-95%) scale(.96)}
+
+        /* ===== 游戏通用 ===== */
+        .game-screen{background:linear-gradient(180deg,#0f1219 0%,#161b29 100%)}
+        .g-header{position:absolute;top:0;left:0;width:100%;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;z-index:10;background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,transparent 100%)}
+        .g-back{background:none;border:none;color:rgba(255,255,255,.85);font-size:14px;cursor:pointer;padding:6px 0}
+        .g-score{background:rgba(255,215,0,.15);color:#FFD700;padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600}
+        .g-body{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 16px 20px}
+        .g-tip{color:rgba(255,255,255,.55);font-size:13px;margin-top:16px;text-align:center;line-height:1.6}
+
+        /* === 游戏1: 迷宫 === */
+        .maze-box{width:100%;max-width:320px;aspect-ratio:1;background:#080c14;border-radius:14px;position:relative;overflow:hidden;box-shadow:0 0 36px rgba(74,144,217,.2),inset 0 0 30px rgba(0,0,0,.5)}
+        .maze-canvas{width:100%;height:100%}
+        .maze-player{position:absolute;width:28px;height:28px;background:radial-gradient(circle at 35% 35%,#FFE066,#FFD700 40%,#F39C12);border-radius:50%;box-shadow:0 0 16px rgba(255,215,0,.7),0 2px 6px rgba(0,0,0,.4);z-index:10;transition:left .12s,top .12s ease-out}
+        .maze-goal{position:absolute;width:36px;height:36px;background:radial-gradient(circle,#6EE7B7,#34D399);border-radius:50%;z-index:5;animation:goalGlow 1.2s ease-in-out infinite}
+        @keyframes goalGlow{0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(52,211,153,.6)}50%{transform:scale(1.15);box-shadow:0 0 32px rgba(52,211,153,.9)}}
+        .maze-controls{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(3,52px);gap:6px;margin-top:20px}
+        .mc-btn{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:12px;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+        .mc-btn:active{background:rgba(255,215,0,.25);border-color:#FFD700;transform:scale(.92)}
+        .mc-btn.empty{visibility:hidden}
+
+        /* === 游戏2: 密码锁 === */
+        .escape-box{width:100%;max-width:320px;aspect-ratio:.85;background:linear-gradient(145deg,#1e1630 0%,#141024 100%);border-radius:16px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;box-shadow:0 0 40px rgba(157,78,221,.2)}
+        .escape-title{color:#C084FC;font-size:17px;font-weight:700;margin-bottom:6px}
+        .escape-hint{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:20px;text-align:center;line-height:1.7}
+        .pwd-row{display:flex;gap:10px;margin-bottom:20px}
+        .pwd-cell{width:56px;height:64px;background:rgba(0,0,0,.4);border:2.5px solid #7C3AED;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace}
+        .keypad{display:grid;grid-template-columns:repeat(3,62px);gap:8px}
+        .k-key{height:48px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:10px;color:#fff;font-size:19px;font-weight:700;cursor:pointer;transition:all .15s}
+        .k-key:active{background:#7C3AED;transform:scale(.93)}
+        .k-del{background:linear-gradient(145deg,#7f1d1d 0%,#450a0a 100%);border-color:#DC2626}
+
+        /* === 游戏3: 考古挖掘 === */
+        .dig-box{width:100%;max-width:340px;height:380px;background:linear-gradient(180deg,#87CEEB 0%,#B0E0E6 30%,#C0986B 30%,#8B6914 70%,#5D4637 100%);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 0 30px rgba(139,115,85,.3)}
+        .dig-sky-text{position:absolute;top:12px;left:0;width:100%;text-align:center;font-size:11px;color:rgba(0,0,0,.4);font-weight:600}
+        .dig-ground{position:absolute;bottom:0;left:0;width:100%;height:65%;background:linear-gradient(180deg,#6B5344 0%,#4A3728 60%,#3D2E21 100%)}
+        .fossil-item{position:absolute;font-size:38px;cursor:pointer;filter:saturate(.3) brightness(1.3);transition:all .3s}
+        .fossil-item.found{animation:fossilPop .5s ease forwards;filter:none}
+        @keyframes fossilPop{0%{transform:scale(0) rotate(-180deg);opacity:0}60%{transform:scale(1.3) rotate(10deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+        .dig-hammer{position:absolute;pointer-events:none;font-size:30px;opacity:0;transition:none}
+        .dig-hammer.hit{animation:hammerHit .3s ease}
+        @keyframes hammerHit{0%{opacity:1;transform:rotate(-30deg) scale(1.5)}50%{opacity:1;transform:rotate(10deg) scale(1.2)}100%{opacity:0;transform:rotate(0) scale(.8)}}
+
+        /* === 游戏4: MR秘境 === */
+        .mr-box{width:100%;max-width:340px;height:400px;background:linear-gradient(180deg,#0a0a1f 0%,#151538 40%,#1a1a4a 70%,#1e3a2e 100%);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 0 36px rgba(100,140,255,.15)}
+        .mr-stars{position:absolute;top:0;left:0;width:100%;height:60%}
+        .mr-star{position:absolute;font-size:14px;color:#fff;animation:twinkle 2s ease-in-out infinite}
+        @keyframes twinkle{0%,100%{opacity:.3}50%{opacity:1}}
+        .mr-ground{position:absolute;bottom:0;left:0;width:100%;height:28%;background:linear-gradient(180deg,#2d5a27 0%,#1e3d1a 100%);border-radius:16px 16px 0 0}
+        .mr-item{position:absolute;font-size:42px;cursor:pointer;animation:mrFloat 2.5s ease-in-out infinite;transition:all .2s}
+        @keyframes mrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+        .mr-item.got{animation:mrCollect .5s ease forwards}
+        @keyframes mrCollect{0%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.7}100%{transform:scale(0) translateY(-80px);opacity:0}}
+        .mr-sparkle{position:absolute;width:30px;height:30px;pointer-events:none;animation:sparkFade .6s ease forwards}
+        @keyframes sparkFade{0%{transform:scale(0) rotate(0);opacity:1}100%{transform:scale(2) rotate(180deg);opacity:0}}
+
+        /* === 游戏5: 香包DIY === */
+        .sachet-area{width:100%;max-width:340px;text-align:center}
+        .sachet-bowl-wrap{position:relative;width:180px;height:110px;margin:0 auto 24px}
+        .sachet-bowl{width:100%;height:100%;background:linear-gradient(180deg,#A0522D 0%,#8B4513 50%,#654321 100%);border-radius:0 0 90px 90px;position:relative;box-shadow:inset 0 -16px 30px rgba(0,0,0,.35),0 6px 16px rgba(0,0,0,.3)}
+        .sachet-bowl-rim{position:absolute;top:-4px;left:-8px;right:-8px;height:24px;background:linear-gradient(180deg,#CD853F 0%,#A0522D 100%);border-radius:8px}
+        .bowl-items{position:absolute;top:28px;left:16px;right:16px;height:66px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-content:center}
+        .bowl-item{font-size:22px;animation:itemDrop .4s cubic-bezier(.175,.885,.32,1.275)}
+        @keyframes itemDrop{from{transform:scale(0) translateY(-40px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+        .ing-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px}
+        .ing-card{width:72px;height:76px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+        .ing-card:active{transform:scale(.92);border-color:#FFD700;background:rgba(255,215,0,.15)}
+        .ing-card.used{opacity:.3;pointer-events:none}
+        .ing-icon{font-size:26px;margin-bottom:3px}
+        .ing-name{font-size:10px;color:rgba(255,255,255,.6)}
+        .sachet-result{text-align:center;padding:20px;background:rgba(255,255,255,.08);border-radius:16px;display:none;border:2px dashed rgba(255,215,0,.3)}
+        .sachet-result.show{display:block;animation:fadeUp .5s ease}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .sachet-final-icon{font-size:72px;display:inline-block;animation:sachetShine 2s ease-in-out infinite}
+        @keyframes sachetShine{0%,100%{filter:drop-shadow(0 0 12px rgba(239,68,68,.5))}50%{filter:drop-shadow(0 0 28px rgba(239,68,68,.8))}}
+
+        /* ===== 完成页/勋章页 ===== */
+        #doneScreen{background:linear-gradient(180deg,#c0392b 0%,#b36b4a 40%,#1a3a5c 75%,#0d2137 100%);padding-top:40px}
+        .badge-wrap{position:relative;margin-bottom:24px}
+        .badge-glow-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:190px;height:190px;background:radial-gradient(circle,rgba(255,215,0,.35) 0%,transparent 70%);animation:ringPulse 2s ease-in-out infinite}
+        @keyframes ringPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.7}50%{transform:translate(-50%,-50%) scale(1.25);opacity:.4}}
+        .badge-main{width:150px;height:150px;background:linear-gradient(145deg,#FFD700 0%,#F39C12 40%,#E67E22 100%);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 40px rgba(255,215,0,.5),inset 0 2px 0 rgba(255,255,255,.3);position:relative;z-index:1;animation:badgeWobble 3s ease-in-out infinite}
+        @keyframes badgeWobble{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+        .badge-emoji{font-size:48px;margin-bottom:4px}
+        .badge-label{color:#8B0000;font-size:13px;font-weight:900;letter-spacing:1px}
+        .done-title{font-size:26px;font-weight:900;color:#FFD700;text-shadow:0 3px 16px rgba(255,215,0,.5);margin-bottom:8px}
+        .done-desc{color:rgba(255,255,255,.9);font-size:13px;text-align:center;line-height:1.8;max-width:300px;margin-bottom:20px}
+        .redeem-card{background:rgba(255,255,255,.13);border:2px dashed rgba(255,255,255,.45);border-radius:14px;padding:18px;text-align:center;max-width:300px;margin-bottom:20px}
+        .redeem-label{font-size:15px;font-weight:700;color:#fff;margin-bottom:10px}
+        .redeem-code{background:rgba(0,0,0,.25);padding:10px 20px;border-radius:8px;color:#FFD700;font-size:22px;font-weight:900;letter-spacing:4px;font-family:'Courier New',monospace;margin-bottom:8px}
+        .redeem-note{font-size:11px;color:rgba(255,255,255,.55)}
+        .share-btn{background:linear-gradient(135deg,#34D399 0%,#10B981 100%);color:#fff;border:none;padding:13px 40px;font-size:16px;font-weight:800;border-radius:50px;cursor:pointer;box-shadow:0 6px 24px rgba(52,211,153,.4);margin-right:10px;margin-bottom:12px}
+        .share-btn:active{transform:scale(.95)}
+        .restart-btn{background:rgba(255,255,255,.15);color:#fff;border:none;padding:13px 28px;font-size:14px;font-weight:600;border-radius:50px;cursor:pointer}
+        .footer-note{font-size:11px;color:rgba(255,255,255,.4);line-height:1.8;margin-top:12px}
+
+        /* Toast */
+        .toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.88);color:#fff;padding:14px 28px;border-radius:12px;font-size:15px;z-index:9999;animation:toastAnim 2s ease forwards;pointer-events:none;backdrop-filter:blur(8px)}
+        @keyframes toastAnim{0%{opacity:0;transform:translate(-50%,-50%) scale(.85)}12%{opacity:1;transform:translate(-50%,-50%) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(.85)}}
+
+        /* Flash */
+        .flash{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:9998;animation:flashOut .3s ease forwards;pointer-events:none}
+        @keyframes flashOut{from{opacity:.7}to{opacity:0}}
+
+        /* Confetti */
+        .confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9997;overflow:hidden}
+        .confetti-piece{position:absolute;width:8px;height:8px;top:-10px;animation:confettiFall linear forwards}
+        @keyframes confettiFall{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+        /* 响应式 */
+        @media(max-height:650px){.home-badge{width:100px;height:100px}.home-title{font-size:24px}.start-btn{padding:12px 44px;font-size:16px}}
+        @media(min-width:480px){.mission-list{max-width:400px}}
+    </style>
+</head>
+<body>
+<div class="bg-layer">
+    <span class="float-item" style="top:8%;left:6%">🍃</span>
+    <span class="float-item" style="top:18%;right:10%;animation-delay:1.5s">🌿</span>
+    <span class="float-item" style="top:58%;left:4%;animation-delay:3s">🎋</span>
+    <span class="float-item" style="top:72%;right:6%;animation-delay:4.5s">🐉</span>
+</div>
+
+<div id="app">
+
+<!-- 首页 -->
+<div id="homeScreen" class="screen active screen-enter">
+    <div class="home-wave"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,60 C150,120 350,0 600,60 C850,120 1050,0 1200,60 L1200,120 L0,120Z" fill="#fff"/></svg></div>
+    <svg class="home-badge" viewBox="0 0 130 130">
+        <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FFD700"/><stop offset="100%" stop-color="#F39C12"/></linearGradient></defs>
+        <circle cx="65" cy="65" r="60" fill="url(#bg)" stroke="#8B0000" stroke-width="3"/>
+        <text x="65" y="52" text-anchor="middle" font-size="32">🏆</text>
+        <text x="65" y="76" text-anchor="middle" font-size="11" fill="#8B0000" font-weight="900">VR探险家</text>
+        <text x="65" y="92" text-anchor="middle" font-size="9" fill="#8B0000">闯关挑战赛</text>
+    </svg>
+    <h1 class="home-title">端午VR探险家</h1>
+    <p class="home-sub">完成5大探险任务 · 领取限量电子勋章</p>
+    <div class="home-store">📍 创幻云VR亲子剧场</div>
+    <button class="start-btn" onclick="go('missionScreen')">开始探险 🚀</button>
+</div>
+
+<!-- 任务列表 -->
+<div id="missionScreen" class="screen">
+    <div class="top-bar">
+        <button class="back-btn" onclick="go('homeScreen')">← 返回</button>
+        <div class="prog-dots" id="progDots"></div>
+    </div>
+    <h2 class="mission-title">🗺️ 探险任务</h2>
+    <div class="mission-list" id="missionList"></div>
+    <button class="claim-btn" id="claimBtn" style="display:none" onclick="go('doneScreen')">🎁 领取勋章</button>
+</div>
+
+<!-- 游戏1: VR太空迷宫 -->
+<div id="g1Screen" class="screen game-screen">
+    <div class="g-header">
+        <button class="g-back" onclick="go('missionScreen')">← 返回</button>
+        <span class="g-score">⏱ <span id="g1Time">30</span>s</span>
+    </div>
+    <div class="g-body">
+        <div class="maze-box" id="mazeBox">
+            <canvas class="maze-canvas" id="mazeCanvas"></canvas>
+            <div class="maze-player" id="mazePlayer"></div>
+            <div class="maze-goal" id="mazeGoal"></div>
+        </div>
+        <div class="maze-controls" id="mazeCtrl">
+            <div class="mc-btn empty"></div><div class="mc-btn" data-dir="up">▲</div><div class="mc-btn empty"></div>
+            <div class="mc-btn" data-dir="left">◀</div><div class="mc-btn" data-dir="down">▼</div><div class="mc-btn" data-dir="right">▶</div>
+            <div class="mc-btn empty"></div><div class="mc-btn empty"></div><div class="mc-btn empty"></div>
+        </div>
+        <p class="g-tip">控制小金球到达绿色终点！<br>支持方向键 / 滑动屏幕 / 点击按钮</p>
+    </div>
+</div>
+
+<!-- 游戏2: XR密室逃脱 -->
+<div id="g2Screen" class="screen game-screen">
+    <div class="g-header">
+        <button class="g-back" onclick="go('missionScreen')">← 返回</button>
+        <span class="g-score">❤️ <span id="g2Lives">5</span>次机会</span>
+    </div>
+    <div class="g-body">
+        <div class="escape-box">
+            <div class="escape-title">🔐 XR密室逃脱</div>
+            <p class="escape-hint">提示：今年是哪一年？<br>输入4位数字密码解锁机关！</p>
+            <div class="pwd-row" id="pwdRow"></div>
+            <div class="keypad" id="keypad"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 游戏3: 考古挖掘 -->
+<div id="g3Screen" class="screen game-screen">
+    <div class="g-header">
+        <button class="g-back" onclick="go('missionScreen')">← 返回</button>
+        <span class="g-score">🦕 已发现 <span id="g3Count">0</span>/5</span>
+    </div>
+    <div class="g-body">
+        <div class="dig-box" id="digBox">
+            <div class="dig-sky-text">☀️ 考古挖掘现场 · 点击土堆探索</div>
+            <div class="dig-ground" id="digGround"></div>
+        </div>
+        <p class="g-tip">点击土层区域，挖掘埋藏的化石宝藏！</p>
+    </div>
+</div>
+
+<!-- 游戏4: MR秘境 -->
+<div id="g4Screen" class="screen game-screen">
+    <div class="g-header">
+        <button class="g-back" onclick="go('missionScreen')">← 返回</button>
+        <span class="g-score">✨ 收集 <span id="g4Count">0</span>/6</span>
+    </div>
+    <div class="g-body">
+        <div class="mr-box" id="mrBox">
+            <div class="mr-stars" id="mrStars"></div>
+            <div class="mr-ground"></div>
+        </div>
+        <p class="g-tip">在MR秘境中点击收集神秘物品！</p>
+    </div>
+</div>
+
+<!-- 游戏5: 香包DIY -->
+<div id="g5Screen" class="screen game-screen">
+    <div class="g-header">
+        <button class="g-back" onclick="go('missionScreen')">← 返回</button>
+        <span class="g-score">🧧 进度 <span id="g5Count">0</span>/5</span>
+    </div>
+    <div class="g-body">
+        <div class="sachet-area">
+            <div class="sachet-bowl-wrap">
+                <div class="sachet-bowl"><div class="sachet-bowl-rim"></div><div class="bowl-items" id="bowlItems"></div></div>
+            </div>
+            <div class="ing-grid" id="ingGrid"></div>
+            <div class="sachet-result" id="sachetResult">
+                <div class="sachet-final-icon">🧧</div>
+                <p style="color:#FFD700;font-size:17px;font-weight:900;margin-top:8px">香包制作完成！</p>
+                <p style="color:rgba(255,255,255,.6);font-size:12px;margin-top:6px">精美端午香包已收入囊中~</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 完成页 -->
+<div id="doneScreen" class="screen">
+    <div class="badge-wrap">
+        <div class="badge-glow-ring"></div>
+        <div class="badge-main">
+            <div class="badge-emoji">🏆</div>
+            <div class="badge-label">小小探险家</div>
+        </div>
+    </div>
+    <h2 class="done-title">🎉 恭喜完成全部挑战！</h2>
+    <p class="done-desc">你已成功完成所有VR探险任务<br>获得「端午小小探险家」电子勋章<br>凭此勋章到店兑换</p>
+    <div class="redeem-card">
+        <div class="redeem-label">🎁 兑换奖励</div>
+        <div class="redeem-code" id="redeemCode"></div>
+        <p class="redeem-note">出示本页面给店员 → 领取端午专享香包一个 🎋</p>
+    </div>
+    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px">
+        <button class="share-btn" onclick="doShare()">分享给好友 📤</button>
+        <button class="restart-btn" onclick="location.reload()">再玩一次 🔄</button>
+    </div>
+    <p class="footer-note">有效期至 2026年6月30日<br>创幻云VR亲子剧场</p>
+</div>
+
+</div><!-- end app -->
+
+<script>
+// ========== 状态 ==========
+const S = {
+    done: new Set(),
+    g1:{timer:null,time:30}, g2:{pwd:'',lives:5},
+    g3:{found:0}, g4:{collected:0}, g5:{progress:0},
+    maze:{size:10,cs:0,px:1,py:1,gx:8,gy:8,grid:[]}
+};
+
+const MISSIONS = [
+    {id:1,name:'VR太空探险',desc:'穿越星际迷宫',icon:'🚀'},
+    {id:2,name:'XR密室逃脱',desc:'解开端午密码锁',icon:'🔐'},
+    {id:3,name:'考古挖掘',desc:'发现恐龙化石',icon:'🦕'},
+    {id:4,name:'MR秘境探索',desc:'收集神秘物品',icon:'✨'},
+    {id:5,name:'香包DIY',desc:'制作端午香包',icon:'🧧'}
+];
+
+// ========== 工具 ==========
+function $(id){return document.getElementById(id)}
+function go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el=$(id);
+    el.classList.add('active','screen-enter');
+    setTimeout(()=>el.classList.remove('screen-enter'),400);
+    
+    if(id==='g1Screen') startG1();
+    else if(S.g1.timer){clearInterval(S.g1.timer);S.g1.timer=null}
+    if(id==='missionScreen'){renderMissions();checkAllDone()}
+}
+function toast(msg){
+    const t=document.createElement('div');t.className='toast';t.textContent=msg;
+    document.body.appendChild(t);setTimeout(()=>t.remove(),2000)
+}
+function flash(){const f=document.createElement('div');f.className='flash';document.body.appendChild(f);setTimeout(()=>f.remove(),300)}
+function finish(id){
+    S.done.add(id);
+    flash();
+    toast('🎉 挑战成功！');
+    setTimeout(()=>go('missionScreen'),800)
+}
+function checkAllDone(){
+    $('claimBtn').style.display=S.done.size>=5?'inline-block':'none'
+}
+
+// ========== 首页初始化 ==========
+function init(){
+    // 进度点
+    const dots=$('progDots');
+    for(let i=1;i<=5;i++){
+        const d=document.createElement('div');d.className='prog-dot';
+        if(S.done.has(i))d.classList.add('done');
+        dots.appendChild(d)
+    }
+    renderMissions();
+    initG2();initG3();initG4();initG5();
+    $('redeemCode').textContent='DRG'+Math.random().toString(36).substr(2,4).toUpperCase()
+}
+
+// ========== 任务列表 ==========
+function renderMissions(){
+    const list=$('missionList');
+    list.innerHTML=MISSIONS.map(m=>`
+        <div class="m-card ${S.done.has(m.id)?'done':''}" data-mission="${m.id}" onclick="startMission(${m.id})">
+            <div class="m-icon">${m.icon}</div>
+            <div class="m-info">
+                <div class="m-name">${m.name}</div>
+                <div class="m-desc">${m.desc}</div>
+            </div>
+            <div class="m-check">${S.done.has(m.id)?'✓':''}</div>
+        </div>`).join('');
+    // 更新进度点
+    document.querySelectorAll('.prog-dot').forEach((d,i)=>d.classList.toggle('done',S.done.has(i+1)))
+}
+function startMission(id){
+    if(S.done.has(id)){toast('✅ 已完成此任务');return}
+    go('g'+id+'Screen')
+}
+
+// ========== G1: 迷宫 ==========
+function initG1(){
+    const box=$('mazeBox'),cv=$('mazeCanvas');
+    cv.width=box.offsetWidth;cv.height=box.offsetHeight;
+    const sz=S.maze.size, cs=cv.width/sz;
+    S.maze.cs=cs;
+    // 生成迷宫
+    const g=[];
+    for(let i=0;i<sz;i++){g[i]=[];for(let j=0;j<sz;j++)g[i][j]=(i===0||j===0||i===sz-1||j===sz-1)?1:0}
+    // 加墙但保证路径
+    for(let i=2;i<sz-2;i++)for(let j=2;j<sz-2;j++)if(Math.random()<.22)g[i][j]=1;
+    // 主通道
+    for(let i=1;i<sz-1;i++){g[1][i]=0;g[i][1]=0;g[sz-2][i]=0;g[i][sz-2]=0}
+    S.maze.grid=g;
+    drawMaze();
+    placeMazeObj();
+    // 控制按钮
+    document.querySelectorAll('#mazeCtrl .mc-btn[data-dir]').forEach(btn=>{
+        btn.addEventListener('click',()=>movePlayer(btn.dataset.dir))
+    });
+    // 触摸滑动
+    let tx=0,ty=0;
+    box.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+    box.addEventListener('touchend',e=>{
+        const dx=e.changedTouches[0].clientX-tx,dy=e.changedTouches[0].clientY-ty;
+        if(Math.abs(dx)>Math.abs(dy)){
+            if(dx>25)movePlayer('right');else if(dx<-25)movePlayer('left')
+        }else{
+            if(dy>25)movePlayer('down');else if(dy<-25)movePlayer('up')
+        }
+    },{passive:true})
+}
+function drawMaze(){
+    const cv=$('mazeCanvas'),ctx=cv.getContext('2d');
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const cs=S.maze.cs,g=S.maze.grid;
+    for(let i=0;i<g.length;i++)for(let j=0;j<g[i].length;j++){
+        if(g[i][j]){
+            const grd=ctx.createLinearGradient(j*cs,i*cs,(j+1)*cs,(i+1)*cs);
+            grd.addColorStop(0,'#4a90d9');grd.addColorStop(1,'#2d5a87');
+            ctx.fillStyle=grd;
+            ctx.fillRect(j*cs+2,i*cs+2,cs-4,cs-4)
+        }
+    }
+}
+function placeMazeObj(){
+    const cs=S.maze.cs,p=$('mazePlayer'),goal=$('mazeGoal');
+    p.style.left=(S.maze.px*cs+cs/2-14)+'px';
+    p.style.top=(S.maze.py*cs+cs/2-14)+'px';
+    goal.style.left=(S.maze.gx*cs+cs/2-18)+'px';
+    goal.style.top=(S.maze.gy*cs+cs/2-18)+'px'
+}
+function movePlayer(dir){
+    const map={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+    const [dx,dy]=map[dir];
+    let nx=S.maze.px+dx,ny=S.maze.py+dy;
+    if(nx>=0&&nx<S.maze.size&&ny>=0&&ny<S.maze.size&&S.maze.grid[ny][nx]===0){
+        S.maze.px=nx;S.maze.py=ny;
+        placeMazeObj();
+        if(nx===S.maze.gx&&ny===S.maze.gy){
+            clearInterval(S.g1.timer);S.g1.timer=null;
+            finish(1)
+        }
+    }
+}
+function startG1(){
+    S.g1.time=30;$('g1Time').textContent=30;
+    S.maze.px=1;S.maze.py=1;
+    placeMazeObj();
+    if(S.g1.timer)clearInterval(S.g1.timer);
+    S.g1.timer=setInterval(()=>{
+        S.g1.time--;$('g1Time').textContent=S.g1.time;
+        if(S.g1.time<=0){clearInterval(S.g1.timer);S.g1.timer=null;toast('⏰ 时间到！再来一次~');go('missionScreen')}
+    },1000)
+}
+document.addEventListener('keydown',e=>{
+    if(!$('g1Screen').classList.contains('active'))return;
+    const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
+             a:'left',d:'right',w:'up',s:'down',A:'left',D:'right',W:'up',S:'down'};
+    if(m[e.key])movePlayer(m[e.key])
+});
+
+// ========== G2: 密码锁 ==========
+function initG2(){
+    const row=$('pwdRow');row.innerHTML='';
+    for(let i=0;i<4;i++){
+        const c=document.createElement('div');c.className='pwd-cell';c.textContent='?';c.id='pc'+i;row.appendChild(c)
+    }
+    const kp=$('keypad');kp.innerHTML='';
+    '1234567890'.split().forEach(n=>{
+        const b=document.createElement('button');b.className='k-key';b.textContent=n;
+        b.onclick()=>inputPwd(n);kp.appendChild(b)
+    });
+    const del=document.createElement('button');del.className='k-key k-del';del.textContent='⌫';
+    del.onclick=()=>{if(S.g2.pwd.length){S.g2.pwd=S.g2.pwd.slice(0,-1);updatePwd()}};
+    kp.appendChild(del);
+    const ok=document.createElement('button');ok.className='k-key';ok.style.gridColumn='span 3';
+    ok.style.background='linear-gradient(145deg,#059669 0%,#047857 100%)';ok.style.borderColor='#10B981';
+    ok.textContent='确认 ✓';ok.onclick=submitPwd;kp.appendChild(ok)
+}
+function inputPwd(n){
+    if(S.g2.pwd.length<4){S.g2.pwd+=n;updatePwd()}
+}
+function updatePwd(){
+    for(let i=0;i<4;i++)$('pc'+i).textContent=S.g2.pwd[i]||'?'
+}
+function submitPwd(){
+    if(S.g2.pwd==='2026'){
+        finish(2)
+    }else{
+        S.g2.lives--;$('g2Lives').textContent=S.g2.lives;
+        S.g2.pwd='';updatePwd();
+        if(S.g2.lives<=0)toast('💡 提示：今年的年份哦')
+        else toast('❌ 密码错误，再想想~')
+    }
+}
+
+// ========== G3: 考古挖掘 ==========
+function initG3(){
+    const ground=$('digGround');ground.innerHTML='';
+    const fossils=['🦕','🦖','🦴','🐚','💎'];
+    const used=[];
+    fossils.forEach(f=>{
+        let x,y,tries=0;
+        do{x=8+Math.random()*84;y=10+Math.random()*60;tries++}
+        while(used.some(p=>Math.hypot(p.x-x,p.y-y)<16)&&tries<50);
+        used.push({x,y});
+        const el=document.createElement('div');el.className='fossil-item';el.textContent=f;
+        el.style.left=x+'%';el.style.top=y+'%';
+        el.onclick=()=>digIt(el,f);ground.appendChild(el)
+    });
+    S.g3.found=0;$('g3Count').textContent=0
+}
+function digIt(el,f){
+    if(el.classList.contains('found'))return;
+    el.classList.add('found');
+    S.g3.found++;$('g3Count').textContent=S.g3.found;
+    // 锤子效果
+    const box=$('digBox'),r=el.getBoundingClientRect(),br=box.getBoundingClientRect();
+    const h=document.createElement('div');h.className='dig-hammer';h.textContent='🔨';
+    h.style.left=(r.left-br.left+r.width/2-15)+'px';h.style.top=(r.top-br.top+r.height/2-15)+'px';
+    box.appendChild(h);requestAnimationFrame(()=>h.classList.add('hit'));
+    setTimeout(()=>h.remove(),300);
+    if(S.g3.found>=5)setTimeout(()=>finish(3),600)
+}
+
+// ========== G4: MR秘境 ==========
+function initG4(){
+    const stars=$('mrStars');stars.innerHTML='';
+    for(let i=0;i<20;i++){
+        const s=document.createElement('div');s.className='mr-star';
+        s.textContent='✦';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+        s.style.animationDelay=Math.random()*2+'s';stars.appendChild(s)
+    }
+    const box=$('mrBox'),ground=box.querySelector('.mr-ground');
+    // 清除旧物品
+    box.querySelectorAll('.mr-item').forEach(e=>e.remove());
+    const items=['🌟','💎','🔮','⭐','🌙','☁️'];
+    items.forEach((it,i)=>{
+        const el=document.createElement('div');el.className='mr-item';el.textContent=it;
+        el.style.left=(12+Math.random()*76)+'%';el.style.top=(8+Math.random()*48)+'%';
+        el.style.animationDelay=i*.4+'s';
+        el.onclick=()=>collectMR(el,box);box.insertBefore(el,ground)
+    });
+    S.g4.collected=0;$('g4Count').textContent=0
+}
+function collectMR(el,box){
+    if(el.classList.contains('got'))return;
+    el.classList.add('got');
+    S.g4.collected++;$('g4Count').textContent=S.g4.collected;
+    // 星星特效
+    const r=el.getBoundingClientRect(),br=box.getBoundingClientRect();
+    const sp=document.createElement('div');sp.className='mr-sparkle';
+    sp.innerHTML='✨';sp.style.left=(r.left-br.left+r.width/2-15)+'px';
+    sp.style.top=(r.top-br.top+r.height/2-15)+'px';
+    sp.style.fontSize='24px';box.appendChild(sp);setTimeout(()=>sp.remove(),600);
+    setTimeout(()=>el.style.display='none',500);
+    if(S.g4.collected>=6)setTimeout(()=>finish(4),500)
+}
+
+// ========== G5: 香包DIY ==========
+function initG5(){
+    const grid=$('ingGrid');grid.innerHTML='';
+    const ings=[['🍃','艾草'],['🌸','薰衣草'],['🌺','茉莉花'],['🌿','薄荷'],['⭐','朱砂']];
+    ings.forEach(([ic,n])=>{
+        const c=document.createElement('div');c.className='ing-card';
+        c.innerHTML=`<div class="ing-icon">${ic}</div><div class="ing-name">${n}</div>`;
+        c.onclick=()=>addIng(c,ic);grid.appendChild(c)
+    });
+    $('bowlItems').innerHTML='';$('sachetResult').classList.remove('show');
+    S.g5.progress=0;$('g5Count').textContent=0
+}
+function addIng(card,emoji){
+    if(card.classList.contains('used'))return;
+    card.classList.add('used');
+    S.g5.progress++;$('g5Count').textContent=S.g5.progress;
+    const bi=$('bowlItems');
+    const item=document.createElement('span');item.className='bowl-item';item.textContent=emoji;
+    bi.appendChild(item);
+    if(S.g5.progress>=5){
+        setTimeout(()=>$('sachetResult').classList.add('show'),400);
+        setTimeout(()=>finish(5),1400)
+    }
+}
+
+// ========== 分享 ==========
+function doShare(){
+    if(navigator.share){
+        navigator.share({title:'端午VR探险家',text:'我完成了创幻云VR亲子剧场的端午闯关挑战，获得限量电子勋章！到店出示可兑换端午专享香包~ 🧧🎋',url:location.href}).catch(()=>{})
+    }else{
+        // 复制链接
+        if(navigator.clipboard){
+            navigator.clipboard.writeText(location.href).then(()=>toast('📋 链接已复制，快去分享吧！'))
+        }else{
+            toast('👆 请复制浏览器地址栏链接分享给好友')
+        }
+    }
+}
+
+// ========== 启动 ==========
+init();
+</script>
+</body>
+</html>
