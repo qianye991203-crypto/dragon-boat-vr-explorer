@@ -90,8 +90,8 @@
         .escape-hint{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:18px;text-align:center;line-height:1.7}
         .pwd-row{display:flex;gap:10px;margin-bottom:18px}
         .pwd-cell{width:58px;height:68px;background:rgba(0,0,0,.45);border:2.5px solid #7C3AED;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace;-webkit-user-select:none;user-select:none}
-        .keypad{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:276px;-webkit-box-sizing:border-box;box-sizing:border-box;justify-content:center}
-        .k-key{width:82px;height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);display:inline-flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;padding:0;margin:0;flex-shrink:0;text-align:center;line-height:54px}
+        .keypad{position:relative;width:260px;height:240px;margin:0 auto}
+        .k-key{position:absolute;width:78px;height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);display:flex;align-items:center;justify-content:center;text-align:center;line-height:1}
         .k-key:active{background:#7C3AED;transform:scale(.93);border-color:#A78BFA}
         .k-del{background:linear-gradient(145deg,#7f1d1d 0%,#450a0a 100%);border-color:#DC2626}
 
@@ -508,15 +508,20 @@ function initG2(){
         const c=document.createElement('div');c.className='pwd-cell';c.textContent='?';c.id='pc'+i;row.appendChild(c)
     }
     const kp=$('keypad');kp.innerHTML='';
-    '1234567890'.split().forEach(n=>{
-        const b=document.createElement('button');b.className='k-key';b.textContent=n;
-        b.dataset.num=n;kp.appendChild(b)
+    const keys=[['1','2','3'],['4','5','6'],['7','8','9'],['⌫','0','✓']];
+    const acts={ '⌫':'del', '✓':'ok' };
+    const styles={'⌫':'k-del','✓':''};
+    keys.forEach((row,ri)=>{
+        row.forEach((label,ci)=>{
+            const d=document.createElement('div');d.className='k-key'+(styles[label]?' '+styles[label]:'');
+            d.textContent=label;
+            // 绝对定位: 3列布局
+            d.style.left=(ci*88)+'px';d.style.top=(ri*60)+'px';
+            if(label==='✓'){d.style.width='166px';d.style.gridColumn='span 3';d.style.background='linear-gradient(145deg,#059669 0%,#047857 100%)';d.style.borderColor='#10B981';d.textContent='确认 ✓'}
+            if(acts[label])d.dataset.act=acts[label];else d.dataset.num=label;
+            kp.appendChild(d)
+        })
     });
-    const del=document.createElement('button');del.className='k-key k-del';del.textContent='⌫';
-    del.dataset.act='del';kp.appendChild(del);
-    const ok=document.createElement('button');ok.className='k-key';ok.style.gridColumn='span 3';
-    ok.style.background='linear-gradient(145deg,#059669 0%,#047857 100%)';ok.style.borderColor='#10B981';
-    ok.textContent='确认 ✓';ok.dataset.act='ok';kp.appendChild(ok);
     // 使用事件委托 - 更可靠
     kp.addEventListener('click',function(e){
         const t=e.target.closest('.k-key');if(!t)return;
