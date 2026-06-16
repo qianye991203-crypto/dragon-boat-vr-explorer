@@ -496,7 +496,7 @@ function initG2(){
     const kp=$('keypad');kp.innerHTML='';
     '1234567890'.split().forEach(n=>{
         const b=document.createElement('button');b.className='k-key';b.textContent=n;
-        b.onclick()=>inputPwd(n);kp.appendChild(b)
+        b.onclick=()=>inputPwd(n);kp.appendChild(b)
     });
     const del=document.createElement('button');del.className='k-key k-del';del.textContent='⌫';
     del.onclick=()=>{if(S.g2.pwd.length){S.g2.pwd=S.g2.pwd.slice(0,-1);updatePwd()}};
