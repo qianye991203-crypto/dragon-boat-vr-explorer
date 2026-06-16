@@ -90,8 +90,8 @@
         .escape-hint{color:rgba(255,255,255,.55);font-size:14px;margin-bottom:18px;text-align:center;line-height:1.7}
         .pwd-row{display:flex;gap:10px;margin-bottom:18px}
         .pwd-cell{width:58px;height:68px;background:rgba(0,0,0,.45);border:2.5px solid #7C3AED;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#FFD700;font-weight:900;font-family:'Courier New',monospace;-webkit-user-select:none;user-select:none}
-        .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px;-webkit-box-sizing:border-box;box-sizing:border-box}
-        .k-key{height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);min-height:54px;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;padding:0;margin:0}
+        .keypad{display:flex;flex-wrap:wrap;gap:8px;width:100%;max-width:276px;-webkit-box-sizing:border-box;box-sizing:border-box;justify-content:center}
+        .k-key{width:82px;height:54px;background:linear-gradient(145deg,#2a2045 0%,#1a1430 100%);border:2px solid #7C3AED;border-radius:12px;color:#fff;font-size:21px;font-weight:700;cursor:pointer;transition:all .1s;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:rgba(124,58,237,.3);display:inline-flex;align-items:center;justify-content:center;-webkit-appearance:none;appearance:none;padding:0;margin:0;flex-shrink:0;text-align:center;line-height:54px}
         .k-key:active{background:#7C3AED;transform:scale(.93);border-color:#A78BFA}
         .k-del{background:linear-gradient(145deg,#7f1d1d 0%,#450a0a 100%);border-color:#DC2626}
 
@@ -128,6 +128,8 @@
         .bowl-item{font-size:22px;animation:itemDrop .4s cubic-bezier(.175,.885,.32,1.275)}
         @keyframes itemDrop{from{transform:scale(0) translateY(-40px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
         .ing-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px}
+        .order-hint{background:rgba(255,215,0,.12);border:1.5px solid rgba(255,215,0,.3);border-radius:12px;padding:10px 16px;margin-bottom:14px;text-align:center;font-size:15px;color:#FFD700;font-weight:600}
+        #orderNext{font-size:24px;margin-left:4px}
         .ing-card{width:72px;height:76px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
         .ing-card:active{transform:scale(.92);border-color:#FFD700;background:rgba(255,215,0,.15)}
         .ing-card.used{opacity:.3;pointer-events:none}
@@ -293,6 +295,7 @@
             <div class="sachet-bowl-wrap">
                 <div class="sachet-bowl"><div class="sachet-bowl-rim"></div><div class="bowl-items" id="bowlItems"></div></div>
             </div>
+            <div class="order-hint" id="orderHint">按顺序添加：<span id="orderNext">?</span></div>
             <div class="ing-grid" id="ingGrid"></div>
             <div class="sachet-result" id="sachetResult">
                 <div class="sachet-final-icon">🧧</div>
@@ -542,20 +545,29 @@ function submitPwd(){
 // ========== G3: 考古挖掘 ==========
 function initG3(){
     const ground=$('digGround');ground.innerHTML='';
-    const fossils=[{e:'🦕',n:'霸王龙'},{e:'🦖',n:'翼龙'},{e:'🦴',n:'恐龙骨'},{e:'🐚',n:'远古海螺'},{e:'💎',n:'神秘宝石'},{e:'🥚',n:'恐龙蛋'}];
+    // 12个化石/物品，需找到8个
+    const fossils=[
+        {e:'🦕',n:'霸王龙'},{e:'🦖',n:'翼龙'},{e:'🦴',n:'恐龙骨'},
+        {e:'🐚',n:'远古海螺'},{e:'💎',n:'神秘宝石'},{e:'🥚',n:'恐龙蛋'},
+        {e:'🌿',n:'远古蕨类'},{e:'🪨',n:'陨石碎片'},{e:'🦷',n:'猛犸象牙'},
+        {e:'🐉',n:'龙鳞化石'},{e:'🔮',n:'水晶原石'},{e:'🏺',n:'古代陶片'}
+    ];
     const used=[];
-    const targetCount=5;
+    const targetCount=8;
     fossils.forEach(f=>{
         let x,y,tries=0;
-        do{x=8+Math.random()*84;y=10+Math.random()*60;tries++}
-        while(used.some(p=>Math.hypot(p.x-x,p.y-y)<16)&&tries<50);
+        do{x=4+Math.random()*90;y=8+Math.random()*65;tries++}
+        while(used.some(p=>Math.hypot(p.x-x,p.y-y)<13)&&tries<60);
         used.push({x,y});
         const el=document.createElement('div');el.className='fossil-item';el.textContent=f.e;
         el.dataset.name=f.n;el.dataset.hits='0';el.dataset.maxHits=String(2+Math.floor(Math.random()*2));
         el.style.left=x+'%';el.style.top=y+'%';
+        el.style.fontSize=(28+Math.random()*16)+'px'; // 不同大小增加难度
+        el.style.opacity='.5'; // 初始半透明，更难发现
         el.onclick=()=>digIt(el,f);ground.appendChild(el)
     });
-    S.g3.found=0;S.g3.total=targetCount;$('g3Count').textContent='0/'+targetCount
+    S.g3.found=0;S.g3.total=targetCount;$('g3Count').textContent='0/'+targetCount;
+    toast('🔍 沙土中有 '+fossils.length+' 个宝藏，找出 '+targetCount+' 个！')
 }
 function digIt(el,f){
     if(el.classList.contains('found'))return;
@@ -600,12 +612,13 @@ function initG4(){
         el.onclick=()=>collectMR(el,box);box.insertBefore(el,ground)
     });
     S.g4.collected=0;S.g4.total=6;$('g4Count').textContent='0/6';
-    // 25秒倒计时
-    let timeLeft=25;
+    // 20秒倒计时
+    let timeLeft=20;
     g4Timer=setInterval(()=>{
         timeLeft--;
         if(timeLeft<=0){clearInterval(g4Timer);g4Timer=null;toast('⏰ 时间到！');setTimeout(()=>go('missionScreen'),1200);return}
-        if(timeLeft%5===0&&timeLeft>0){
+        // 每4秒随机消失一个未收集物品
+        if(timeLeft%4===0&&timeLeft>0){
             const remaining=[];box.querySelectorAll('.mr-item:not(.got)').forEach(e=>remaining.push(e));
             if(remaining.length>S.g4.total-S.g4.collected){
                 const victim=remaining[Math.floor(Math.random()*remaining.length)];
@@ -632,10 +645,10 @@ function collectMR(el,box){
 // ========== G5: 香包DIY ==========
 function initG5(){
     const grid=$('ingGrid');grid.innerHTML='';
-    // 随机指定一个正确顺序（每次不同）
     const allIngs=[['🍃','艾草'],['🌸','薰衣草'],['🌺','茉莉花'],['🌿','薄荷'],['⭐','朱砂']];
     const shuffled=[...allIngs].sort(()=>Math.random()-.5);
-    S.g5.order=shuffled.map(i=>i[0]); // 正确顺序
+    S.g5.order=shuffled.map(i=>i[0]);
+    S.g5.names=shuffled.map(i=>i[1]);
     allIngs.forEach(([ic,n])=>{
         const c=document.createElement('div');c.className='ing-card';
         c.innerHTML=`<div class="ing-icon">${ic}</div><div class="ing-name">${n}</div>`;
@@ -643,13 +656,17 @@ function initG5(){
     });
     $('bowlItems').innerHTML='';$('sachetResult').classList.remove('show');
     S.g5.progress=0;S.g5.mistakes=0;$('g5Count').textContent='0/5';
-    toast('💡 提示：按正确顺序添加材料！')
+    updateOrderHint();
+}
+function updateOrderHint(){
+    const next=S.g5.order[S.g5.progress];
+    const name=S.g5.names[S.g5.progress];
+    $('orderNext').textContent=next+' '+name;
 }
 function addIng(card,emoji){
     if(card.classList.contains('used'))return;
     const expected=S.g5.order[S.g5.progress];
     if(emoji!==expected){
-        // 选错了
         S.g5.mistakes++;
         card.style.animation='shake .4s ease';
         setTimeout(()=>card.style.animation='',400);
@@ -657,7 +674,7 @@ function addIng(card,emoji){
             toast('❌ 材料顺序不对，重新开始吧~');
             setTimeout(()=>initG5(),1000);return
         }
-        toast('❌ 顺序不对哦，再想想~ (错误'+S.g5.mistakes+'/3)');return
+        toast('❌ 顺序不对哦，先加「'+S.g5.names[S.g5.progress]+'」~ (错误'+S.g5.mistakes+'/3)');return
     }
     card.classList.add('used');
     S.g5.progress++;$('g5Count').textContent=S.g5.progress+'/5';
@@ -665,8 +682,11 @@ function addIng(card,emoji){
     const item=document.createElement('span');item.className='bowl-item';item.textContent=emoji;
     bi.appendChild(item);
     if(S.g5.progress>=5){
+        $('orderNext').textContent='✅ 完成！';
         setTimeout(()=>$('sachetResult').classList.add('show'),400);
         setTimeout(()=>finish(5),1400)
+    }else{
+        updateOrderHint()
     }
 }
 
